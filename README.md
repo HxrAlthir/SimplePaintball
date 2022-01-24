@@ -1,5 +1,15 @@
 [![Build Status](https://travis-ci.com/jakeryang/SimplePaintball.svg?branch=master)](https://travis-ci.com/jakeryang/SimplePaintball)
 
+
+------------------------------------------------------------------------------------------
+Fork features:
+- players can select team
+  - player is given a red and a blue peace of armor in the lobby to select his team
+  - players who do not select the team wil be assigned to one
+  - team assignment will be: try to achieve equally sized teams if possible, 
+  - randomly assign remaining undesided players if teams are equally sized.
+------------------------------------------------------------------------------------------
+  
 # SimplePaintball
 Spigot 1.14 Paintball Plugin. Made with the idea that the Minecraft accounts are shared.
 
