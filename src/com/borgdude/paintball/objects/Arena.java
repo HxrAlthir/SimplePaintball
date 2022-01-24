@@ -1149,16 +1149,28 @@ public class Arena {
                 ItemMeta im = is.getItemMeta();
                 im.setDisplayName(plugin.getLanguageManager().getMessage("In-Game.Leave-Bed"));
                 is.setItemMeta(im);
-                player.getInventory().setHeldItemSlot(2);
-                player.getInventory().setItem(2, is);
+                player.getInventory().setHeldItemSlot(0); // shifted from 2 to 0
+                player.getInventory().setItem(0, is);     // 
 
-                int i = 3;
+                int i = 2;
                 for (Gun gun : plugin.getPaintballManager().getGuns()) {
                     ItemStack lobbyItem = gun.getLobbyItem();
                     if (lobbyItem == null)
                         continue;
                     player.getInventory().setItem(i++, lobbyItem);
                 }
+                
+                // 
+                // add red and blue armor chestplate for fixed team selection
+                // 
+                ItemStack cp_red = new ItemStack(Material.LEATHER_CHESTPLATE);
+                cp_red.getItemMeta().setDisplayName(ChatColor.RED + "Team Red");
+                ItemStack cp_blu = new ItemStack(Material.LEATHER_CHESTPLATE);
+                cp_blu.getItemMeta().setDisplayName(ChatColor.BLUE + "Team Blue");
+                player.getInventory().setItem(8, cp_red);
+                player.getInventory().setItem(9, cp_blu);
+                // 
+                                                               
             }
         }.runTaskLater(plugin, 10);
     }

@@ -4,7 +4,7 @@
   <groupId>SimplePaintball</groupId>
   <artifactId>SimplePaintball</artifactId>
   <name>SimplePaintball</name>
-  <version>0.3.4-alpha.5</version>
+  <version>0.4.1-alpha.5</version>
   <organization>
     <name>Jake Gutierrez</name>
     <url>jakerg.me</url>
@@ -56,10 +56,7 @@
               <goal>run</goal>
             </goals>
             <configuration>
-              <tasks>
-                <copy />
-                <copy />
-              </tasks>
+              <tasks />
             </configuration>
           </execution>
         </executions>
