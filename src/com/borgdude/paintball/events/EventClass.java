@@ -200,7 +200,14 @@ public class EventClass implements Listener {
                     boolean nameEquals = isNamedItem(eventItem, gunItem.getItemMeta().getDisplayName());
                     if (nameEquals && typeEquals) {
                         arena.setGunKit(player, gun);
+                        return; // exit here if gun selected
                     }
+                }
+                
+                boolean isaChestplate = eventItem.getType().equals(Material.LEATHER_CHESTPLATE);
+                if (isaChestplate) {
+                     arena.setTeam(player);
+                     // should still equip armor
                 }
             }
         }

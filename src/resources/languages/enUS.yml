@@ -12,6 +12,7 @@ Arena:
   Reward-Player: "You were given %amount% and now have %balance%"
   Second-Unit: seconds
   Set-Gun: "&bYou are now using the &a%name%."
+  Set-Team: "&bTeam selected."
   Start-Countdown: "&bGame starting in &a%time% seconds."
   State: 
     Ending: "&cEnding"

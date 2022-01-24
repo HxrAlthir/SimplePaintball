@@ -32,6 +32,7 @@ import org.bukkit.scoreboard.Team.OptionStatus;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 
 public class Arena {
 
@@ -798,6 +799,18 @@ public class Arena {
         player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Set-Gun").replace("%name%", gun.getName()));
     }
 
+    public void setTeam(Player player) {
+        UUID id = player.getUniqueId();
+//        if (getGunKits().containsKey(id)) {
+//            getGunKits().replace(id, gun);
+//        } else {
+//            getGunKits().put(id, gun);
+//        }
+//        player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Set-Team").replace("%name%", gun.getName()));
+        player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Set-Team"));
+    }
+       
+    
     private void removeScoreboard(Player player) {
         player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
     }
@@ -1164,13 +1177,21 @@ public class Arena {
                 // add red and blue armor chestplate for fixed team selection
                 // 
                 ItemStack cp_red = new ItemStack(Material.LEATHER_CHESTPLATE);
-                cp_red.getItemMeta().setDisplayName(ChatColor.RED + "Team Red");
+                LeatherArmorMeta cp_red_im = (LeatherArmorMeta) cp_red.getItemMeta();
+                cp_red_im.setDisplayName(ChatColor.RED + "Team Red");
+                cp_red_im.setUnbreakable(true);
+                cp_red_im.setColor(ColorUtil.translateChatColorToColor(ChatColor.RED));
+                cp_red.setItemMeta(cp_red_im);
+                player.getInventory().setItem(7, cp_red);
+                
                 ItemStack cp_blu = new ItemStack(Material.LEATHER_CHESTPLATE);
-                cp_blu.getItemMeta().setDisplayName(ChatColor.BLUE + "Team Blue");
-                player.getInventory().setItem(8, cp_red);
-                player.getInventory().setItem(9, cp_blu);
-                // 
-                                                               
+                LeatherArmorMeta cp_blu_im = (LeatherArmorMeta) cp_blu.getItemMeta();
+                cp_blu_im.setDisplayName(ChatColor.BLUE + "Team Blue");
+                cp_blu_im.setUnbreakable(true);
+                cp_blu_im.setColor(ColorUtil.translateChatColorToColor(ChatColor.BLUE));
+                cp_blu.setItemMeta(cp_blu_im);
+                player.getInventory().setItem(8, cp_blu);
+                
             }
         }.runTaskLater(plugin, 10);
     }
