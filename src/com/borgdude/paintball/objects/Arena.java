@@ -32,6 +32,7 @@ import org.bukkit.scoreboard.Team.OptionStatus;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 
 public class Arena {
@@ -799,15 +800,79 @@ public class Arena {
         player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Set-Gun").replace("%name%", gun.getName()));
     }
 
-    public void setTeam(Player player) {
-        UUID id = player.getUniqueId();
-//        if (getGunKits().containsKey(id)) {
-//            getGunKits().replace(id, gun);
-//        } else {
-//            getGunKits().put(id, gun);
-//        }
-//        player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Set-Team").replace("%name%", gun.getName()));
-        player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Set-Team"));
+    public void setTeam(Player player, ItemStack item) {
+        // UUID id = player.getUniqueId();
+        // ItemStack : ChestPlate red, ChestPlate blue, Barrier
+
+        boolean isaChestplate = item.getType().equals(Material.LEATHER_CHESTPLATE);
+        PlayerInventory plInventory = (PlayerInventory) player.getInventory();
+        
+        if ( isaChestplate ) {
+            LeatherArmorMeta item_im = (LeatherArmorMeta) item.getItemMeta();
+            boolean itsRED = item_im.getColor().equals(ColorUtil.translateChatColorToColor(ChatColor.RED));
+            boolean itsBLUE = item_im.getColor().equals(ColorUtil.translateChatColorToColor(ChatColor.BLUE));
+            boolean playerHasTeam = plInventory.getChestplate().getType().equals(Material.LEATHER_CHESTPLATE);
+            
+            if ( playerHasTeam ) {
+                
+                ItemStack prevCp = (ItemStack) plInventory.getChestplate();
+                
+                if ( itsRED ) { // replace BLUE by RED
+                
+                    ItemStack prevBrr = (ItemStack) plInventory.getItem(8);
+                    // barrier 8 --> 7
+                    plInventory.setItem(6, prevBrr); // 6 should be free
+                    plInventory.setItem(8, prevCp);
+                    plInventory.setChestplate(item); // free 7
+                    plInventory.setItem(7, prevBrr);
+                    
+                } else if ( itsBLUE ) {
+                    plInventory.setItem(7, prevCp);
+                    
+                    ItemStack prevBrr = (ItemStack) plInventory.getItem(7);
+                    // barrier 7 --> 8
+                    plInventory.setItem(6, prevBrr); // 6 should be free
+                    plInventory.setItem(7, prevCp);
+                    plInventory.setChestplate(item); // free 8
+                    plInventory.setItem(8, prevBrr);
+                    
+                } // else if its yellow...
+                
+            } else {
+                // no team yet, create Barrier
+                // chestplate will be equipped automatically
+                
+                ItemStack newBrr = new ItemStack(Material.BARRIER);
+                newBrr.getItemMeta().setDisplayName(ChatColor.BLACK + "Reset Team");
+                newBrr.getItemMeta().setUnbreakable(true);
+                
+                if ( itsRED ) {
+                    plInventory.setItem(7, newBrr);
+                } else if ( itsBLUE ) {
+                    plInventory.setItem(8, newBrr);
+                }
+            }
+            if ( itsRED ) {
+                player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Set-Team").replace("%color%", ColorUtil.ChatColorToString(ChatColor.RED)));
+            } else if ( itsBLUE ) {
+                player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Set-Team").replace("%color%", ColorUtil.ChatColorToString(ChatColor.BLUE)));
+            }
+            
+        } else { // its the barrier block 
+            // delete the barrier block and put armor back
+            
+            ItemStack prevCp = (ItemStack) plInventory.getChestplate();
+            LeatherArmorMeta prevCp_im = (LeatherArmorMeta) prevCp.getItemMeta();
+            boolean itsRED = prevCp_im.getColor().equals(ColorUtil.translateChatColorToColor(ChatColor.RED));
+            boolean itsBLUE = prevCp_im.getColor().equals(ColorUtil.translateChatColorToColor(ChatColor.BLUE));
+            
+            if ( itsRED ) {
+                plInventory.setItem(7, prevCp); // overwrites?
+            } else if ( itsBLUE ) {
+                plInventory.setItem(8, prevCp);
+            }
+            player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Reset-Team"));
+        }
     }
        
     
@@ -1173,9 +1238,7 @@ public class Arena {
                     player.getInventory().setItem(i++, lobbyItem);
                 }
                 
-                // 
                 // add red and blue armor chestplate for fixed team selection
-                // 
                 ItemStack cp_red = new ItemStack(Material.LEATHER_CHESTPLATE);
                 LeatherArmorMeta cp_red_im = (LeatherArmorMeta) cp_red.getItemMeta();
                 cp_red_im.setDisplayName(ChatColor.RED + "Team Red");

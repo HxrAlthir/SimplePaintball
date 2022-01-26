@@ -204,10 +204,21 @@ public class EventClass implements Listener {
                     }
                 }
                 
+                // preselect teams. number of teams is not limited here yet.
+                
+                // not allowed to change teams if start in < 5 seconds!
+                if (arena.getTimer() <= 5)
+                    return;
+                
                 boolean isaChestplate = eventItem.getType().equals(Material.LEATHER_CHESTPLATE);
-                if (isaChestplate) {
-                     arena.setTeam(player);
-                     // should still equip armor
+                boolean isaBarrier = eventItem.getType().equals(Material.BARRIER);
+                // if isaBarrier {
+                        // remove if placed
+                // }
+                
+                if (isaChestplate || isaBarrier) {
+                     arena.setTeam(player, eventItem);
+                     return;
                 }
             }
         }
