@@ -62,6 +62,7 @@ public class Arena {
 
     public Arena(String name, Main plugin) {
         this.title = name;
+        this.timer = 60;
         players = new HashSet<>();
         setSpectators(new HashSet<>());
         kills = new HashMap<>();
@@ -803,22 +804,34 @@ public class Arena {
     public void setTeam(Player player, ItemStack item) {
         // UUID id = player.getUniqueId();
         // ItemStack : ChestPlate red, ChestPlate blue, Barrier
+        
+        player.sendMessage("Fcn setTeam called");
 
-        boolean isaChestplate = item.getType().equals(Material.LEATHER_CHESTPLATE);
         PlayerInventory plInventory = (PlayerInventory) player.getInventory();
         
+        boolean isaChestplate = item.getType().equals(Material.LEATHER_CHESTPLATE);
+        
+        
         if ( isaChestplate ) {
+            
+            player.sendMessage(" Fcn setTeam --> chestplate clicked ");
+            
             LeatherArmorMeta item_im = (LeatherArmorMeta) item.getItemMeta();
             boolean itsRED = item_im.getColor().equals(ColorUtil.translateChatColorToColor(ChatColor.RED));
             boolean itsBLUE = item_im.getColor().equals(ColorUtil.translateChatColorToColor(ChatColor.BLUE));
-            boolean playerHasTeam = plInventory.getChestplate().getType().equals(Material.LEATHER_CHESTPLATE);
             
-            if ( playerHasTeam ) {
+            // boolean playerHasTeam = plInventory.getChestplate().getType().equals(Material.LEATHER_CHESTPLATE); // exception if null
+            
+            if ( plInventory.getChestplate() != null ) {
+                
+                player.sendMessage(" Fcn setTeam --> already equipped with chestplate");
                 
                 ItemStack prevCp = (ItemStack) plInventory.getChestplate();
                 
                 if ( itsRED ) { // replace BLUE by RED
                 
+                    player.sendMessage(" Fcn setTeam -->  equipped whith RED");    
+                    
                     ItemStack prevBrr = (ItemStack) plInventory.getItem(8);
                     // barrier 8 --> 7
                     plInventory.setItem(6, prevBrr); // 6 should be free
@@ -827,6 +840,9 @@ public class Arena {
                     plInventory.setItem(7, prevBrr);
                     
                 } else if ( itsBLUE ) {
+                    
+                    player.sendMessage(" Fcn setTeam -->  equipped whith BLUE");    
+                    
                     plInventory.setItem(7, prevCp);
                     
                     ItemStack prevBrr = (ItemStack) plInventory.getItem(7);
@@ -842,16 +858,23 @@ public class Arena {
                 // no team yet, create Barrier
                 // chestplate will be equipped automatically
                 
+                player.sendMessage(" Fcn setTeam --> not yet equipped with chestplate");
+                
                 ItemStack newBrr = new ItemStack(Material.BARRIER);
-                newBrr.getItemMeta().setDisplayName(ChatColor.BLACK + "Reset Team");
-                newBrr.getItemMeta().setUnbreakable(true);
+                ItemMeta newBrr_im = newBrr.getItemMeta();
+                newBrr_im.setDisplayName(ChatColor.BLACK + "Reset Team");
+                newBrr_im.setUnbreakable(true);
+                newBrr.setItemMeta(newBrr_im);
                 
                 if ( itsRED ) {
+                    player.sendMessage(" Fcn setTeam -->  give Barrier to 7");
                     plInventory.setItem(7, newBrr);
                 } else if ( itsBLUE ) {
+                    player.sendMessage(" Fcn setTeam -->  give Barrier to 8");
                     plInventory.setItem(8, newBrr);
                 }
             }
+            
             if ( itsRED ) {
                 player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Set-Team").replace("%color%", ColorUtil.ChatColorToString(ChatColor.RED)));
             } else if ( itsBLUE ) {
@@ -861,18 +884,44 @@ public class Arena {
         } else { // its the barrier block 
             // delete the barrier block and put armor back
             
-            ItemStack prevCp = (ItemStack) plInventory.getChestplate();
-            LeatherArmorMeta prevCp_im = (LeatherArmorMeta) prevCp.getItemMeta();
-            boolean itsRED = prevCp_im.getColor().equals(ColorUtil.translateChatColorToColor(ChatColor.RED));
-            boolean itsBLUE = prevCp_im.getColor().equals(ColorUtil.translateChatColorToColor(ChatColor.BLUE));
+            player.sendMessage(" Fcn setTeam --> barrier clicked ");
             
-            if ( itsRED ) {
-                plInventory.setItem(7, prevCp); // overwrites?
-            } else if ( itsBLUE ) {
-                plInventory.setItem(8, prevCp);
-            }
-            player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Reset-Team"));
+            // ItemStack prevCp = (ItemStack) plInventory.getChestplate(); // ---> null
+            
+            ItemStack[] plArmor = plInventory.getArmorContents(); // ---> all null 
+            
+//            player.sendMessage(" Fcn setTeam --> Array erstellt " + String.valueOf(plArmor.length) );
+//            
+//            for ( int i=0 ; i < plArmor.length ; i++  ) {
+//                if ( plArmor[i] == null ) {
+//                    player.sendMessage(" Fcn setTeam -->  " + " Element " + String.valueOf(i+1) + " ist null");
+//                } else {
+//                    player.sendMessage(" Fcn setTeam -->  " + " Element " + String.valueOf(i+1) + " ist " + plArmor[i].getType().toString() );
+//                }
+//            }
+            
+            
+            
+//            if ( false ) {
+//                player.sendMessage(" Fcn setTeam -->   wtf its a null pointer ");
+//            } else {
+//                player.sendMessage(" Fcn setTeam -->   yippie not a null NAN ");
+//                LeatherArmorMeta prevCp_im = (LeatherArmorMeta) prevCp.getItemMeta();
+//                boolean itsRED = prevCp_im.getColor().equals(ColorUtil.translateChatColorToColor(ChatColor.RED));
+//                boolean itsBLUE = prevCp_im.getColor().equals(ColorUtil.translateChatColorToColor(ChatColor.BLUE));
+//                if ( itsRED ) {
+//                    player.sendMessage(" Fcn setTeam -->    es war ROT ");
+//                    plInventory.setItem(7, prevCp); // overwrites?
+//                    plInventory.setChestplate(null);
+//                } else if ( itsBLUE ) {
+//                    player.sendMessage(" Fcn setTeam -->    es war BLAU ");
+//                    plInventory.setItem(8, prevCp);
+//                    plInventory.setChestplate(null);
+//                }
+//                player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Reset-Team"));
+//            }
         }
+        player.sendMessage(" Fcn setTeam --> ended here");
     }
        
     

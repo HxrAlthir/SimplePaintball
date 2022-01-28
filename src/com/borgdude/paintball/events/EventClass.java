@@ -203,22 +203,24 @@ public class EventClass implements Listener {
                         return; // exit here if gun selected
                     }
                 }
-                
                 // preselect teams. number of teams is not limited here yet.
-                
                 // not allowed to change teams if start in < 5 seconds!
-                if (arena.getTimer() <= 5)
+                if (arena.getTimer() <= 5) {
+                    
+                    player.sendMessage("Timer < 5, Teamauswahl blockiert");
+                    
                     return;
-                
+                }
                 boolean isaChestplate = eventItem.getType().equals(Material.LEATHER_CHESTPLATE);
                 boolean isaBarrier = eventItem.getType().equals(Material.BARRIER);
-                // if isaBarrier {
-                        // remove if placed
-                // }
-                
                 if (isaChestplate || isaBarrier) {
-                     arena.setTeam(player, eventItem);
-                     return;
+                    if ( isaBarrier ) player.sendMessage("BariereBlock aktiviert");
+                    if ( isaChestplate ) player.sendMessage("Chestplate aktiviert");
+                    
+                    arena.setTeam(player, eventItem);
+                    // if isaBarrier {
+                        // remove if placed
+                    // }
                 }
             }
         }
