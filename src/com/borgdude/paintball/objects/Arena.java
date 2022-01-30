@@ -812,8 +812,19 @@ public class Arena {
         player.sendMessage("Fcn setTeam called");
         PlayerInventory plInventory = (PlayerInventory) player.getInventory();
         
-        boolean onTeamRED = ( teamChoice != null && teamChoice.get(id).equals(ColorUtil.ChatColorToString(ChatColor.RED)));
-        boolean onTeamBLUE = ( teamChoice != null && teamChoice.get(id).equals(ColorUtil.ChatColorToString(ChatColor.BLUE)));
+        boolean onTeamRED  = false; 
+        boolean onTeamBLUE = false;
+        
+        if ( teamChoice != null && teamChoice.get(id) != null
+                && teamChoice.get(id).equals(ColorUtil.ChatColorToString(ChatColor.RED)) ) {
+                    onTeamRED = true;
+        }
+                
+        if ( teamChoice != null && teamChoice.get(id) != null
+                && teamChoice.get(id).equals(ColorUtil.ChatColorToString(ChatColor.BLUE)) ) {
+                    onTeamBLUE = true;
+        }
+        
         boolean setRED = false; // want to join RED
         boolean setBLUE = false; // want to join BLUE
         
@@ -834,14 +845,20 @@ public class Arena {
         newBrr_im.setDisplayName(ChatColor.WHITE + "Unselect Team");
         newBrr_im.setUnbreakable(true);
         newBrr.setItemMeta(newBrr_im);
+        
         ItemStack prevCp = null;
         if ( onTeamRED || onTeamBLUE ) { 
             player.sendMessage(" Fcn setTeam --> already on team, get old chestplate");
             prevCp = plInventory.getChestplate();
-            if ( prevCp == null ) {
-                player.sendMessage(" Fcn setTeam -->  still NULL returned !! ");
-            }
-            plInventory.setChestplate(null);
+             
+            if ( prevCp == null ) { player.sendMessage(" 1: prevCp = NULL"); }
+            else { player.sendMessage(" 1: prevCp = " + prevCp.getItemMeta().getDisplayName()); }
+            
+            plInventory.setChestplate(null); // FAIL
+            plInventory.setChestplate(null); // FAIL
+            plInventory.setChestplate(null); // FAIL
+            plInventory.setChestplate(null); // FAIL
+            
         }
         
         if ( setRED || setBLUE ) { 
@@ -862,10 +879,14 @@ public class Arena {
             teamChoice.remove(id);
             // restore hotbar items
             if ( onTeamRED ) {
-                player.sendMessage(" Fcn setTeam --> remove barrier, red chestplate goes to hotbar 7");
-                plInventory.setItem(7, prevCp); // overwrites barrier
+                if ( prevCp == null ) { player.sendMessage(" 2: prevCp = NULL"); }
+                else { player.sendMessage(" 2: prevCp = " + prevCp.getItemMeta().getDisplayName()); }
+                player.sendMessage(" Fcn setTeam --> remove barrier, blue chestplate goes to hotbar 7");
+                plInventory.setItem(7, prevCp); // behaves strange..
             }
             if ( onTeamBLUE ) { 
+                if ( prevCp == null ) { player.sendMessage(" 2: prevCp = NULL"); }
+                else { player.sendMessage(" 2: prevCp = " + prevCp.getItemMeta().getDisplayName()); }
                 player.sendMessage(" Fcn setTeam --> remove barrier, blue chestplate goes to hotbar 8");
                 plInventory.setItem(8, prevCp); // overwrites barrier
             }
