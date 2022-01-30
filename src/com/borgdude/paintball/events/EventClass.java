@@ -206,9 +206,7 @@ public class EventClass implements Listener {
                 // preselect teams. number of teams is not limited here yet.
                 // not allowed to change teams if start in < 5 seconds!
                 if (arena.getTimer() <= 5) {
-                    
                     player.sendMessage("Timer < 5, Teamauswahl blockiert");
-                    
                     return;
                 }
                 boolean isaChestplate = eventItem.getType().equals(Material.LEATHER_CHESTPLATE);
@@ -219,7 +217,7 @@ public class EventClass implements Listener {
                     
                     arena.setTeam(player, eventItem);
                     // if isaBarrier {
-                        // remove if placed
+                        // remove if placed in world?
                     // }
                 }
             }

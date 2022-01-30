@@ -13,7 +13,7 @@ Arena:
   Second-Unit: seconds
   Set-Gun: "&bYou are now using the &a%name%."
   Set-Team: "&bTeam %color% &bselected."
-  Reset-Team: "&bTeam selection cancelled."
+  Reset-Team: "&bTeam selection undone. You will join a random team!"
   Start-Countdown: "&bGame starting in &a%time% seconds."
   State: 
     Ending: "&cEnding"

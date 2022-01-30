@@ -57,6 +57,8 @@ public class Arena {
     private Scoreboard board;
     private HashMap<UUID, Gun> gunKits;
     private HashMap<UUID, Integer> spawnTimer = null;
+    private HashMap<UUID, String> teamChoice; //
+    
 
     private PaintballManager paintballManger;
 
@@ -74,6 +76,7 @@ public class Arena {
         this.plugin = plugin;
         this.paintballManger = plugin.getPaintballManager();
         initializeTeams();
+        teamChoice = new HashMap<>();
     }
 
     private void initializeTeams() {
@@ -802,124 +805,77 @@ public class Arena {
     }
 
     public void setTeam(Player player, ItemStack item) {
-        // UUID id = player.getUniqueId();
+        UUID id = player.getUniqueId();
+        // called when RMB event on a chestplate or barrier item
         // ItemStack : ChestPlate red, ChestPlate blue, Barrier
-        
+        // teamChoice : HashMap<UUID, String> 
         player.sendMessage("Fcn setTeam called");
-
         PlayerInventory plInventory = (PlayerInventory) player.getInventory();
         
-        boolean isaChestplate = item.getType().equals(Material.LEATHER_CHESTPLATE);
+        boolean onTeamRED = ( teamChoice != null && teamChoice.get(id).equals(ColorUtil.ChatColorToString(ChatColor.RED)));
+        boolean onTeamBLUE = ( teamChoice != null && teamChoice.get(id).equals(ColorUtil.ChatColorToString(ChatColor.BLUE)));
+        boolean setRED = false; // want to join RED
+        boolean setBLUE = false; // want to join BLUE
         
-        
-        if ( isaChestplate ) {
-            
+        if ( item.getType().equals(Material.LEATHER_CHESTPLATE) ) {
             player.sendMessage(" Fcn setTeam --> chestplate clicked ");
-            
             LeatherArmorMeta item_im = (LeatherArmorMeta) item.getItemMeta();
-            boolean itsRED = item_im.getColor().equals(ColorUtil.translateChatColorToColor(ChatColor.RED));
-            boolean itsBLUE = item_im.getColor().equals(ColorUtil.translateChatColorToColor(ChatColor.BLUE));
-            
-            // boolean playerHasTeam = plInventory.getChestplate().getType().equals(Material.LEATHER_CHESTPLATE); // exception if null
-            
-            if ( plInventory.getChestplate() != null ) {
-                
-                player.sendMessage(" Fcn setTeam --> already equipped with chestplate");
-                
-                ItemStack prevCp = (ItemStack) plInventory.getChestplate();
-                
-                if ( itsRED ) { // replace BLUE by RED
-                
-                    player.sendMessage(" Fcn setTeam -->  equipped whith RED");    
-                    
-                    ItemStack prevBrr = (ItemStack) plInventory.getItem(8);
-                    // barrier 8 --> 7
-                    plInventory.setItem(6, prevBrr); // 6 should be free
-                    plInventory.setItem(8, prevCp);
-                    plInventory.setChestplate(item); // free 7
-                    plInventory.setItem(7, prevBrr);
-                    
-                } else if ( itsBLUE ) {
-                    
-                    player.sendMessage(" Fcn setTeam -->  equipped whith BLUE");    
-                    
-                    plInventory.setItem(7, prevCp);
-                    
-                    ItemStack prevBrr = (ItemStack) plInventory.getItem(7);
-                    // barrier 7 --> 8
-                    plInventory.setItem(6, prevBrr); // 6 should be free
-                    plInventory.setItem(7, prevCp);
-                    plInventory.setChestplate(item); // free 8
-                    plInventory.setItem(8, prevBrr);
-                    
-                } // else if its yellow...
-                
-            } else {
-                // no team yet, create Barrier
-                // chestplate will be equipped automatically
-                
-                player.sendMessage(" Fcn setTeam --> not yet equipped with chestplate");
-                
-                ItemStack newBrr = new ItemStack(Material.BARRIER);
-                ItemMeta newBrr_im = newBrr.getItemMeta();
-                newBrr_im.setDisplayName(ChatColor.BLACK + "Reset Team");
-                newBrr_im.setUnbreakable(true);
-                newBrr.setItemMeta(newBrr_im);
-                
-                if ( itsRED ) {
-                    player.sendMessage(" Fcn setTeam -->  give Barrier to 7");
-                    plInventory.setItem(7, newBrr);
-                } else if ( itsBLUE ) {
-                    player.sendMessage(" Fcn setTeam -->  give Barrier to 8");
-                    plInventory.setItem(8, newBrr);
-                }
-            }
-            
-            if ( itsRED ) {
-                player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Set-Team").replace("%color%", ColorUtil.ChatColorToString(ChatColor.RED)));
-            } else if ( itsBLUE ) {
-                player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Set-Team").replace("%color%", ColorUtil.ChatColorToString(ChatColor.BLUE)));
-            }
-            
-        } else { // its the barrier block 
-            // delete the barrier block and put armor back
-            
+            setRED = item_im.getColor().equals(ColorUtil.translateChatColorToColor(ChatColor.RED));
+            setBLUE = item_im.getColor().equals(ColorUtil.translateChatColorToColor(ChatColor.BLUE));
+        } else if ( item.getType().equals(Material.BARRIER) ) {
             player.sendMessage(" Fcn setTeam --> barrier clicked ");
-            
-            // ItemStack prevCp = (ItemStack) plInventory.getChestplate(); // ---> null
-            
-            ItemStack[] plArmor = plInventory.getArmorContents(); // ---> all null 
-            
-//            player.sendMessage(" Fcn setTeam --> Array erstellt " + String.valueOf(plArmor.length) );
-//            
-//            for ( int i=0 ; i < plArmor.length ; i++  ) {
-//                if ( plArmor[i] == null ) {
-//                    player.sendMessage(" Fcn setTeam -->  " + " Element " + String.valueOf(i+1) + " ist null");
-//                } else {
-//                    player.sendMessage(" Fcn setTeam -->  " + " Element " + String.valueOf(i+1) + " ist " + plArmor[i].getType().toString() );
-//                }
-//            }
-            
-            
-            
-//            if ( false ) {
-//                player.sendMessage(" Fcn setTeam -->   wtf its a null pointer ");
-//            } else {
-//                player.sendMessage(" Fcn setTeam -->   yippie not a null NAN ");
-//                LeatherArmorMeta prevCp_im = (LeatherArmorMeta) prevCp.getItemMeta();
-//                boolean itsRED = prevCp_im.getColor().equals(ColorUtil.translateChatColorToColor(ChatColor.RED));
-//                boolean itsBLUE = prevCp_im.getColor().equals(ColorUtil.translateChatColorToColor(ChatColor.BLUE));
-//                if ( itsRED ) {
-//                    player.sendMessage(" Fcn setTeam -->    es war ROT ");
-//                    plInventory.setItem(7, prevCp); // overwrites?
-//                    plInventory.setChestplate(null);
-//                } else if ( itsBLUE ) {
-//                    player.sendMessage(" Fcn setTeam -->    es war BLAU ");
-//                    plInventory.setItem(8, prevCp);
-//                    plInventory.setChestplate(null);
-//                }
-//                player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Reset-Team"));
-//            }
+        } else {
+            player.sendMessage(" Fcn setTeam --> not supposed to be here.. ");
+        }
+        
+        // prepare a barrier block to allow undo team selection 
+        ItemStack newBrr = new ItemStack(Material.BARRIER);
+        ItemMeta newBrr_im = newBrr.getItemMeta();
+        newBrr_im.setDisplayName(ChatColor.WHITE + "Unselect Team");
+        newBrr_im.setUnbreakable(true);
+        newBrr.setItemMeta(newBrr_im);
+        ItemStack prevCp = null;
+        if ( onTeamRED || onTeamBLUE ) { 
+            player.sendMessage(" Fcn setTeam --> already on team, get old chestplate");
+            prevCp = plInventory.getChestplate();
+            if ( prevCp == null ) {
+                player.sendMessage(" Fcn setTeam -->  still NULL returned !! ");
+            }
+            plInventory.setChestplate(null);
+        }
+        
+        if ( setRED || setBLUE ) { 
+            player.sendMessage(" Fcn setTeam --> equip new chestplate explicitely! ");
+            plInventory.setChestplate(item);
+        }
+
+        if ( setRED ) { // hotBar slot 7
+            player.sendMessage(" Fcn setTeam --> choice RED! barrier goes to hotbar 7");
+            teamChoice.put(id, ColorUtil.ChatColorToString(ChatColor.RED));
+            plInventory.setItem(7, newBrr);
+        } else if ( setBLUE ) { // slot 8
+            player.sendMessage(" Fcn setTeam --> choice BLUE! barrier goes to hotbar 8");
+            teamChoice.put(id, ColorUtil.ChatColorToString(ChatColor.BLUE));
+            plInventory.setItem(8, newBrr);
+        } else { // barrier clicked, remove team assignment 
+            player.sendMessage(" Fcn setTeam --> undo team selection.");
+            teamChoice.remove(id);
+            // restore hotbar items
+            if ( onTeamRED ) {
+                player.sendMessage(" Fcn setTeam --> remove barrier, red chestplate goes to hotbar 7");
+                plInventory.setItem(7, prevCp); // overwrites barrier
+            }
+            if ( onTeamBLUE ) { 
+                player.sendMessage(" Fcn setTeam --> remove barrier, blue chestplate goes to hotbar 8");
+                plInventory.setItem(8, prevCp); // overwrites barrier
+            }
+        }
+        if ( setRED ) {
+            player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Set-Team").replace("%color%", ColorUtil.ChatColorToString(ChatColor.RED)));
+        } else if ( setBLUE ) {
+            player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Set-Team").replace("%color%", ColorUtil.ChatColorToString(ChatColor.BLUE)));
+        } else {
+            player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Reset-Team"));
         }
         player.sendMessage(" Fcn setTeam --> ended here");
     }
