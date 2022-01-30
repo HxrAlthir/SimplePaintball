@@ -4,12 +4,10 @@ import com.borgdude.paintball.Main;
 import com.borgdude.paintball.managers.ArenaManager;
 import com.borgdude.paintball.managers.PaintballManager;
 import com.borgdude.paintball.objects.*;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
@@ -27,11 +25,15 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
 //import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -170,50 +172,97 @@ public class EventClass implements Listener {
     @EventHandler
     public void lobbyEvents(PlayerInteractEvent event) {
         if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            if (event.getItem() == null)
-                return;
+          if (event.getItem() == null)
+            return;
 
-            if (event.getItem().getType().equals(Material.WHITE_BED)
+          final ItemStack item = event.getItem();
+          final Player    player = event.getPlayer();
+          final Arena     arena = this.arenaManager.getPlayerArena(player);
+
+          if (arena == null || item == null) {
+            // not playing or empty slot
+            return;
+          }
+          // cancel event no matter what is clicked
+          event.setCancelled(true);
+          if (item.getType().equals(Material.WHITE_BED)
                     && isNamedItem(event.getItem(), plugin.getLanguageManager().getMessage("In-Game.Leave-Bed"))) {
-                final Player player = event.getPlayer();
-
                 Bukkit.dispatchCommand(player, "pb leave");
-                event.setCancelled(true);
-            } else {
-                Player player = event.getPlayer();
-                Arena arena = this.arenaManager.getPlayerArena(player);
-                ItemStack eventItem = event.getItem();
+            }
+            else if (item.getType().equals(Material.LEATHER_CHESTPLATE)) {
+              LeatherArmorMeta meta = (LeatherArmorMeta)item.getItemMeta();
 
-                if (eventItem == null) {
-                    System.out.println("Item not found");
-                    return;
+              // preselect teams. number of teams is not limited here yet.
+              // not allowed to change teams if start in < 5 seconds!
+              if (arena.getTimer() <= 5) {
+                player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Team-Select-Over"));
+                return;
+              }
+              if (meta.hasEnchants()) {
+                // chose the team that is already assigned => unassign
+                arena.setPlayerTeam(player, null);
+                removeEnchantments(meta, null);
+                setChestArmor(player, null);
+              }
+              else{
+                // check color to find team:
+                if (arena.setPlayerTeam(player, meta.getColor())) {
+                  // remove enchantments from all other chestplates
+                  // TODO: adjust for more teams!
+
+                  // for (ItemStack invItem : player.getInventory().getContents()) { / this checks ALL slots!
+                  for (ItemStack invItem : Arrays.asList(player.getInventory().getItem(7), player.getInventory().getItem(8))) {
+                    if (invItem != null && invItem.getType().equals(Material.LEATHER_CHESTPLATE)) {
+                      removeEnchantments(invItem.getItemMeta(), invItem);
+                    }
+                  }
+                  meta.addEnchant(Enchantment.MENDING, 1, true);
+                  meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                  setChestArmor(player, meta.getColor());
                 }
-
-                if (arena == null)
-                    return;
-
+              }
+              item.setItemMeta(meta);
+            }
+            else {
                 for (Gun gun : this.paintballManager.getGuns()) {
                     ItemStack gunItem = gun.getLobbyItem();
                     if (gunItem == null)
                         continue;
-                    boolean typeEquals = eventItem.getType().equals(gunItem.getType());
-                    boolean nameEquals = isNamedItem(eventItem, gunItem.getItemMeta().getDisplayName());
+                    boolean typeEquals = item.getType().equals(gunItem.getType());
+                    boolean nameEquals = isNamedItem(item, gunItem.getItemMeta().getDisplayName());
                     if (nameEquals && typeEquals) {
                         arena.setGunKit(player, gun);
                         return; // exit here if gun selected
                     }
                 }
-                
-                boolean isaChestplate = eventItem.getType().equals(Material.LEATHER_CHESTPLATE);
-                if (isaChestplate) {
-                     arena.setTeam(player);
-                     // should still equip armor
-                }
             }
         }
     }
 
-    @EventHandler
+  private void setChestArmor(Player player, Color color) {
+      if (color == null) {
+        player.getInventory().setChestplate(null);
+      }
+      else {
+        ItemStack item = new ItemStack(Material.LEATHER_CHESTPLATE);
+        ItemMeta  meta = item.getItemMeta();
+
+        ((LeatherArmorMeta)meta).setColor(color);
+        item.setItemMeta(meta);
+        player.getInventory().setChestplate(item);
+      }
+  }
+
+  private void removeEnchantments(ItemMeta meta, ItemStack item) {
+    for (Map.Entry<Enchantment, Integer> entry : meta.getEnchants().entrySet()) {
+      meta.removeEnchant(entry.getKey());
+    }
+    if (item != null) {
+      item.setItemMeta(meta);
+    }
+  }
+
+  @EventHandler
     public void onHit(ProjectileHitEvent event) {
         Player shooter;
         Player hit;

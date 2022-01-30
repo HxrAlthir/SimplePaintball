@@ -1,0 +1,57 @@
+--- 
+Arena: 
+  End-Countdown: "&aEs verbleiben noch &b%time% &a%unit%"
+  Game-Started: "&aSpiel gestartet!"
+  Join-Team: "&aSu bist im Team %team%"
+  Leave: "&aDu hast die Arena verlassen."
+  Leave-First: "&eDu bist bereits in einer Arena. Verlasse diese zuerst mit /pb leave"
+  Minute-Unit: Minuten
+  Not-Enough-Players: "&eNicht genug Spieler, Start nicht möglich"
+  Not-In: "&eDu bist nicht in einer Arena."
+  Protected: "&eDu bist für  &c%time% &e%unit% geschützt."
+  Reward-Player: "Du erhälst %amount% und hast nun %balance%"
+  Second-Unit: Sekunden
+  Set-Gun: "&Du verwendest jetzt &a%name%."
+  Start-Countdown: "&bDa Spiel startet in &a%time% Sekunden."
+  State: 
+    Ending: "&cBeendet"
+    Playing: "&cLaufend"
+    Restarting: "&cNeustart"
+    Starting: "&cStart"
+    Waiting: "&cWartend"
+  Tie-Kills: "&aUnentschieden mit &e%kills% &a%verb%!"
+  Win-Default: "%team% &a gewinnt kampflos!"
+  Win-Kills: "%team% &ateam gewinnt mit &e%kills% &a%verb%!"
+  Teleport-Not-Allowed: "&cDu darfst dich nicht teleportieren während du an einem Spiel teilnimmst."
+  Team-Select-Over: "§cDas Spiel startet gleich, du kannst dein Team nicht mehr auswählen."
+  Only-One-Team: "§cIhr habt alle das selbe Team gewählt, das Spiel kann nicht starten!"
+Command:
+  Disabled: "&eDieser Befehl wurde deaktiviert."
+Edit: 
+  Arena-Not-Activated: "&cArena: &e%title% &cinaktiv"
+  Arena-Not-Found: "&cArena: &e%title% &cnicht gefunden"
+  Created-Arena: "&aPaintball-Arena &b%title% angelegt"
+  Now-Editing-Arena: "&aArena &b%title% wird bearbeitet."
+  Remove-In-Progress: "&eArena ist beschäftigt"
+  Remove-Success: "&9Arena &a%title% &9erfolgreich entfernt."
+  Force-Save: "&aAlle Arenen wurden gespeichert..."
+Help: 
+  Basic: 
+    Join: "&9Der Paintball-Arena mit dem angegebenen Namen beitreten."
+    Leaderboard: "&9Gibt die Top-10-Spieler nach Siegen oder Treffer aus."
+    List: "&9A list of all of the arenas you're able to join or spectate"
+    Spectate: "&9Bei einer Arena zusehen, in der ein Spiel läuft."
+In-Game: 
+  Killed: Erwischt
+  Kills: Treffer
+  Leave-Bed: "&bArena verlassen"
+Join: 
+  Arena-In-Game: "&cArena &e%title%&c: Spiel läuft"
+  Success: "&aDu bist der Arena &b%title% beigetreten."
+Leaderboard: 
+  Title: "&9--- &aTop-10 %stat% &9---"
+List: 
+  Title: "&aListe der aktiven Arenen:"
+Spectate: 
+  Success: "&aDu beobachtest Arena &b%title%"
+  Arena-Not-In-Game: "&cArena &e%title%&c: kein Spiel"

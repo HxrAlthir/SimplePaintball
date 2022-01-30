@@ -376,7 +376,6 @@ public class PaintballCommand implements CommandExecutor {
                         List<PlayerStats> stats = Main.db.getTopKills(10);
                         int i = 1;
                         for (PlayerStats stat : stats) {
-                            System.out.println(stat);
                             player.sendMessage(ChatColor.GREEN + String.valueOf(i++) + ". " + ChatColor.BLUE + stat.name
                                     + ": " + ChatColor.GREEN + stat.kills + " kills");
                         }

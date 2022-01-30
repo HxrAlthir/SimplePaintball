@@ -20,6 +20,7 @@ import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -32,7 +33,6 @@ import org.bukkit.scoreboard.Team.OptionStatus;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
-import org.bukkit.inventory.meta.LeatherArmorMeta;
 
 public class Arena {
 
@@ -56,6 +56,7 @@ public class Arena {
     private Scoreboard board;
     private HashMap<UUID, Gun> gunKits;
     private HashMap<UUID, Integer> spawnTimer = null;
+    private HashMap<UUID, Team> playerTeams;
 
     private PaintballManager paintballManger;
 
@@ -68,6 +69,7 @@ public class Arena {
         signLocations = new ArrayList<>();
         setGunKits(new HashMap<>());
         setSpawnTimer(new HashMap<>());
+        playerTeams = new HashMap<>();
         pbPlayers = new HashMap<>();
         this.plugin = plugin;
         this.paintballManger = plugin.getPaintballManager();
@@ -230,12 +232,11 @@ public class Arena {
 
         updateSigns();
 
-        System.out.println(title.equalsIgnoreCase("title"));
+        setTotalTime(getLobbyTime());
         if (title.equalsIgnoreCase("title") || getPlayers().size() >= getMinPlayers()) {
 
             Bukkit.getConsoleSender().sendMessage("Starting arena " + getTitle());
             setArenaState(ArenaState.STARTING);
-            setTotalTime(getLobbyTime());
             BukkitRunnable runnable = new BukkitRunnable() {
                 @Override
                 public void run() {
@@ -289,14 +290,16 @@ public class Arena {
         int time = plugin.getConfig().getInt("lobby-time");
         if (time <= 5) {
             time = 60;
-            System.out.println("Invalid lobby time, please configure an integer greater than 5");
+            plugin.getLogger().warning("Invalid lobby time, please configure an integer greater than 5");
         }
         return time;
     }
 
     public void startGame() {
         addMetrics();
-        assignTeams();
+        if (!assignTeams()) { //  abort!
+          return;
+        }
         for (Team t : teams.values())
             t.giveArmor();
 //        blueTeam.giveArmor();
@@ -411,7 +414,7 @@ public class Arena {
         int time = plugin.getConfig().getInt("game-time");
         if (time < 30) {
             time = 240;
-            System.out.println("Invalid game time, please configure an integer greater than 30");
+          plugin.getLogger().warning("Invalid game time, please configure an integer greater than 30");
         }
         return time;
     }
@@ -502,66 +505,72 @@ public class Arena {
         });
     }
 
-    public void assignTeams() {
-        String team;
-        Random random = new Random();
-        // if both teams have the same amount of players....
-        for (UUID id : getPlayers()) {
-            Player p = Bukkit.getServer().getPlayer(id);
-            if (p == null)
-                continue;
-            p.getInventory().clear();
-            p.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, plugin.getConfig().getInt("game-time") * 20,
-                    5, true));
-            p.setLevel(0);
+    private boolean assignTeams() {
+      Random random = new Random();
 
-            List<Team> teamsToPlaceOn = getLowestMemberTeams();
-            System.out.println("Teams:");
-            for (Team t : teamsToPlaceOn) {
-                System.out.println("\t" + t.getName());
-            }
-            Collections.shuffle(teamsToPlaceOn);
-            Team t = teamsToPlaceOn.get(random.nextInt(teamsToPlaceOn.size()));
-            team = t.getName();
-            t.addMember(p);
+      Set<UUID>  players = new HashSet<>(getPlayers());
 
-//            if (redTeam.getMembers().size() == blueTeam.getMembers().size()) {
-//                // add to a random team
-//                if (random.nextBoolean()) {
-//                    // add to red
-//                    redTeam.addMember(p);
-//                    team = "&c&lRed";
-//                } else {
-//                    // add to blue
-//                    blueTeam.addMember(p);
-//                    team = "&b&lBlue";
-//                }
-//            } else {
-//                // add to the team with the smaller amount of players
-//                if (redTeam.getMembers().size() < blueTeam.getMembers().size()) {
-//                    // add to red
-//                    redTeam.addMember(p);
-//                    team = "&c&lRed";
-//                } else {
-//                    // add to blue
-//                    blueTeam.addMember(p);
-//                    team = "&b&lBlue";
-//                }
-//            }
-            p.sendMessage(plugin.getLanguageManager().getMessage("Arena.Join-Team").replace("%team%",
-                    ChatColor.translateAlternateColorCodes('&', team)));
-        }
+      // first assign the players that have chosen a team
+      for (Map.Entry<UUID, Team> entry : playerTeams.entrySet()) {
+        preparePlayer(entry.getKey(), entry.getValue());
+        players.remove(entry.getKey());
+      }
+      // now add the unassigned players to random teams (only choose from the smallest)
+      for (UUID id : players) {
+        List<Team> teamsToPlaceOn = getLowestMemberTeams();
 
+        preparePlayer(id, teamsToPlaceOn.get(random.nextInt(teamsToPlaceOn.size())));
+      }
+      // now check that there are at least two teams with players:
+      // it can happen that there is only one team if all players chose the same
+      int activeTeams = 0;
+
+      for (Team t : getPlayableTeams()) {
+        if (t.getMembers().size() > 0)
+          activeTeams++;
+      }
+      if (activeTeams == 0) {
+        broadcast(plugin.getLanguageManager().getMessage("Arena.Only-One-Team"));
+        stopGame(false);
+        return false;
+      }
+      return true;
+    }
+
+    private void preparePlayer(UUID id, Team team) {
+      Player p = Bukkit.getServer().getPlayer(id);
+      if (p == null)
+        return; // left server?
+      p.getInventory().clear();
+      p.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, plugin.getConfig().getInt("game-time") * 20,
+              5, true));
+      p.setLevel(0);
+      team.addMember(p);
+      p.sendMessage(plugin.getLanguageManager().getMessage("Arena.Join-Team").replace("%team%",
+              ChatColor.translateAlternateColorCodes('&', team.getChatName())));
+    }
+
+  private void broadcast(String message) {
+    for (UUID id : players) {
+      Player p =  Bukkit.getServer().getPlayer(id);
+      if (p != null) {
+        p.sendMessage(message);
+      }
+    }
+  }
+
+    private List<Team> getPlayableTeams() {
+      List<Team> listTeams = new ArrayList<>(teams.values());
+
+      listTeams.removeIf(t -> t.getSpawnLocations().size() == 0);
+      return listTeams;
     }
 
     private List<Team> getLowestMemberTeams() {
         int minTeam = getMaxPlayers();
+        List<Team> listTeams = getPlayableTeams();
 
-        List<Team> listTeams = new ArrayList<>(teams.values());
-
-        listTeams.removeIf(t -> t.getSpawnLocations().size() == 0);
-
-        for (Team t : listTeams) {
+      for (Team t : listTeams) {
             minTeam = Math.min(minTeam, t.getMembers().size());
         }
 
@@ -578,7 +587,7 @@ public class Arena {
                 continue;
             Gun gun = getGunKits().get(p.getUniqueId());
             if (gun == null) {
-                System.out.println(p.getName() + "'s kit was null");
+                plugin.getLogger().warning(p.getName() + "'s kit was null");
                 gun = paintballManger.getGunByName("Regular");
             }
             ItemStack is = gun.getInGameItem();
@@ -665,10 +674,16 @@ public class Arena {
     }
 
     public void stopGame() {
+      stopGame(true);
+    }
+
+    private void stopGame(boolean win) {
         setArenaState(ArenaState.RESTARTING);
         updateSigns();
-        Team team = announceWinner();
-        setStats(team);
+        if (win) {
+          Team team = announceWinner();
+          setStats(team);
+        }
         kickPlayers();
         for (Team t : teams.values())
             t.getMembers().clear();
@@ -799,18 +814,38 @@ public class Arena {
         player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Set-Gun").replace("%name%", gun.getName()));
     }
 
-    public void setTeam(Player player) {
-        UUID id = player.getUniqueId();
-//        if (getGunKits().containsKey(id)) {
-//            getGunKits().replace(id, gun);
-//        } else {
-//            getGunKits().put(id, gun);
-//        }
-//        player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Set-Team").replace("%name%", gun.getName()));
-        player.sendMessage(plugin.getLanguageManager().getMessage("Arena.Set-Team"));
+    public boolean setPlayerTeam(Player player, Color teamColor) {
+      UUID id = player.getUniqueId();
+
+      if (teamColor == null) {
+        // unassign team
+        if (playerTeams.containsKey(id)) {
+          playerTeams.remove(id);
+          return true;
+        }
+      }
+      else {
+        // find team from color:
+        Team team = null;
+
+        for (Team t : getPlayableTeams()) {
+          if (t.getColor().equals(teamColor)) {
+            team = t;
+          }
+        }
+        if (team == null) {
+          // should not be possible :/
+          plugin.getLogger().warning("Arena " + getTitle() + ": player " + player.getName() + " selected team "
+                  + teamColor.toString() + " but no such team exists!");
+        }
+        else {
+          playerTeams.put(id, team);
+          return true;
+        }
+      }
+      return false;
     }
-       
-    
+
     private void removeScoreboard(Player player) {
         player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
     }
@@ -1135,7 +1170,7 @@ public class Arena {
         Gun gun = getGunKits().get(player.getUniqueId());
 
         if (gun == null) {
-            System.out.println(player.getName() + "'s kit was null");
+            plugin.getLogger().warning(player.getName() + "'s kit was null");
             gun = paintballManger.getGunByName("Regular");
         }
         ItemStack is = gun.getInGameItem();
@@ -1174,24 +1209,23 @@ public class Arena {
                 }
                 
                 // 
-                // add red and blue armor chestplate for fixed team selection
+                // add armor chestplates for fixed team selection
+                //
+                List<Team> teams = getPlayableTeams();
+
+                if (teams.size() == 2) { // TODO: implement for more teams -> submenu
+                  int pos = 7; // second from the right in the hotbar!
+                  for (Team team : teams) {
+                    ItemStack cp = new ItemStack(Material.LEATHER_CHESTPLATE);
+                    LeatherArmorMeta meta = (LeatherArmorMeta) cp.getItemMeta();
+                    meta.setColor(team.getColor());
+                    meta.setDisplayName(team.getChatColor() + "Team " + team.getName());
+                    cp.setItemMeta(meta);
+                    player.getInventory().setItem(pos++, cp);
+                  }
+                }
                 // 
-                ItemStack cp_red = new ItemStack(Material.LEATHER_CHESTPLATE);
-                LeatherArmorMeta cp_red_im = (LeatherArmorMeta) cp_red.getItemMeta();
-                cp_red_im.setDisplayName(ChatColor.RED + "Team Red");
-                cp_red_im.setUnbreakable(true);
-                cp_red_im.setColor(ColorUtil.translateChatColorToColor(ChatColor.RED));
-                cp_red.setItemMeta(cp_red_im);
-                player.getInventory().setItem(7, cp_red);
-                
-                ItemStack cp_blu = new ItemStack(Material.LEATHER_CHESTPLATE);
-                LeatherArmorMeta cp_blu_im = (LeatherArmorMeta) cp_blu.getItemMeta();
-                cp_blu_im.setDisplayName(ChatColor.BLUE + "Team Blue");
-                cp_blu_im.setUnbreakable(true);
-                cp_blu_im.setColor(ColorUtil.translateChatColorToColor(ChatColor.BLUE));
-                cp_blu.setItemMeta(cp_blu_im);
-                player.getInventory().setItem(8, cp_blu);
-                
+                                                               
             }
         }.runTaskLater(plugin, 10);
     }

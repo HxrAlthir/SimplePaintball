@@ -132,11 +132,15 @@ public class Team {
     public String getChatName() {
         return this.chatColor + this.name;
     }
-    
+
+    public Color getColor() {
+    return this.color;
+  }
+
     public ChatColor getChatColor() {
-        return this.chatColor;
-    }
-    
+    return this.chatColor;
+  }
+
     public String getScoreboardID() {
         return this.getName().toLowerCase() + "PBKC";
     }

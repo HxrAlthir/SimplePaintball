@@ -27,7 +27,7 @@ public class LanguageManager {
         if (langFile == null) {
             return;
         } else if (langFile.exists()) {
-            System.out.println("Using locale: " + langFile.getName());
+          plugin.getLogger().info("Using locale: " + langFile.getName());
         }
 
         languages = YamlConfiguration.loadConfiguration(langFile);

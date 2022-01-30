@@ -12,7 +12,8 @@ Arena:
   Reward-Player: "You were given %amount% and now have %balance%"
   Second-Unit: seconds
   Set-Gun: "&bYou are now using the &a%name%."
-  Set-Team: "&bTeam selected."
+  Set-Team: "&bTeam %color% &bselected."
+  Reset-Team: "&bTeam selection cancelled."
   Start-Countdown: "&bGame starting in &a%time% seconds."
   State: 
     Ending: "&cEnding"
@@ -24,6 +25,8 @@ Arena:
   Win-Default: "%team% &awins by default!"
   Win-Kills: "%team% &ateam won with &e%kills% &a%verb%!"
   Teleport-Not-Allowed: "&cYou're not allowed to teleport while in an arena"
+  Team-Select-Over: "§cThe match starts soon, team selection is disabled."
+  Only-One-Team: "§cYou all chose the same team, the game cannot start!"
 Command: 
   Disabled: "&eThis command has been disabled"
 Edit: 
