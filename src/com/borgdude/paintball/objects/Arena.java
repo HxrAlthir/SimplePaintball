@@ -529,7 +529,7 @@ public class Arena {
         if (t.getMembers().size() > 0)
           activeTeams++;
       }
-      if (activeTeams == 0) {
+      if (activeTeams < 2) {
         broadcast(plugin.getLanguageManager().getMessage("Arena.Only-One-Team"));
         stopGame(false);
         return false;
